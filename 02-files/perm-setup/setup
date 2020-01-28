@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo chmod u+s /usr/bin/tac
+sudo setcap cap_dac_read_search+ep /usr/bin/rev
+sudo chmod 400 flag
+sudo chown root:root flag
