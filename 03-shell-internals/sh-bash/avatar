@@ -1,0 +1,19 @@
+#!/bin/sh
+
+echo "ana" &> /dev/null
+echo "ana" > /dev/null 2>&1
+gcc &> /dev/null
+gcc > /dev/null 2>&1
+
+name="Thales"
+if [[ "$name" =~ .*ale.* ]]; then
+    echo "match"
+fi
+
+for i in $(seq 1 10); do
+    echo "$i"
+done
+
+for j in {11..20}; do
+    echo "$j"
+done

@@ -1,0 +1,75 @@
+#!/bin/bash
+
+clear_problematic_packages() {
+    output="$1"
+    shift
+    all="${@// /$'\n'}"
+    bad=$({ rev | cut -d' ' -f1 | rev; } <<< "$output")
+
+    # Set diference
+    packages=($(comm -23 <(sort <<< "$all") <(sort <<< "$bad")))
+
+    printf "%s " "${packages[@]}"
+}
+
+install_apt_packages() {
+    output=$(sudo apt -y install $@ 2>&1)
+
+    # Unfortunately, it seem apt is too dumb to be forced to continue in
+    # case just one of its arguments is problematic. If any package is not
+    # found, apt stops without installing anything; on the bright side, it
+    # reports all missing packages at once, so we'll remove them from the
+    # list in one run and try apt again.
+    if [ $? -ne 0 ]; then
+        echo "here"
+        output=$(grep "E: Unable to locate package" <<< "$output")
+        packages=$(clear_problematic_packages "$output" "$@")
+
+        # fingers crossed...
+        sudo apt -y install ${packages[@]}
+    fi
+}
+
+get_packages_from_file() {
+    packages_file="$1"
+        packages=()
+    while read line; do
+        # allow comments and empty lines in packages file
+        if [[ "$line" =~ "#"  || -z "$line" ]]; then
+            continue
+        fi
+
+        # allow inclusion of other packages files
+        if [[ "$line" =~ ^\+ ]]; then
+            extra_packages=$(get_packages_from_file "${line:1}")
+            packages=("${packages[@]}" "${extra_packages[@]}")
+            continue
+        fi
+
+        packages+=("$line")
+    done < "$packages_file"
+
+    printf "%s " "${packages[@]}"
+}
+
+install_packages_file() {
+    packages=$(get_packages_from_file "$1")
+    install_apt_packages "${packages[@]}"
+}
+
+
+sudo apt clean
+sudo apt autoclean
+sudo apt update
+sudo apt -y upgrade
+sudo apt -y full-upgrade
+
+sudo dpkg --add-architecture i386
+
+for packages_file; do
+    install_packages_file "$packages_file"
+done
+
+sudo apt clean
+sudo apt autoclean
+sudo apt-file update
