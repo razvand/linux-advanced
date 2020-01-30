@@ -1,0 +1,11 @@
+#!/bin/bash
+
+list=""
+cat /etc/passwd | grep '10' | while IFS=':' read username rest; do
+    if [[ "$username" =~ .*s.* ]]; then
+        echo "found $username"
+        exit 0
+    fi
+done
+
+echo "ha"

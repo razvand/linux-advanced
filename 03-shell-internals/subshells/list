@@ -1,0 +1,7 @@
+#!/bin/bash
+
+list=""
+cat /etc/passwd | grep '10' | while IFS=':' read username rest; do
+    list="$list, $username"
+    echo "Add $username"
+done
