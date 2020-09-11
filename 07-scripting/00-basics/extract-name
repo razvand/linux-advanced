@@ -1,0 +1,6 @@
+#!/bin/bash
+
+IFS=','
+while read name group final_grade test_grade practical_grade; do
+    echo "$name"
+done < students.csv
